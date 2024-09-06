@@ -135,6 +135,75 @@ class Parser:
         # Newline is end of statement.
         self.nl()
 
+    # BNF: comparison ::= expression (("==" | "!=" | ">" | ">=" | "<" | "<=") expression)+
+    def comparison(self):
+        print("COMPARISON")
+
+        self.expression()
+        # Must be at least one comparison operator and another expression.
+        if self.isComparisonOperator():
+            self.nextToken()
+            self.expression()
+        else:
+            self.abort("Expected comparison operator at: " + self.curToken.text)
+
+        # Can have 0 or more comparison operator and expressions.
+        while self.isComparisonOperator():
+            self.nextToken()
+            self.expression()
+
+    # Return true if the current token is a comparison operator.
+    def isComparisonOperator(self):
+        return (
+            self.checkToken(TokenType.GT)
+            or self.checkToken(TokenType.GTEQ)
+            or self.checkToken(TokenType.LT)
+            or self.checkToken(TokenType.LTEQ)
+            or self.checkToken(TokenType.EQEQ)
+            or self.checkToken(TokenType.NOTEQ)
+        )
+
+    # BNF: expression ::= term {( "-" | "+" ) term}
+    def expression(self):
+        print("EXPRESSION")
+
+        self.term()
+        # Can have 0 or more +/- and expressions.
+        while self.checkToken(TokenType.PLUS) or self.checkToken(TokenType.MINUS):
+            self.nextToken()
+            self.term()
+
+    # BNF: term ::= unary {( "/" | "*" ) unary}
+    def term(self):
+        print("TERM")
+
+        self.unary()
+        # Can have 0 or more *// and expressions.
+        while self.checkToken(TokenType.ASTERISK) or self.checkToken(TokenType.SLASH):
+            self.nextToken()
+            self.term()
+
+    # BNF: unary ::= ["+" | "-"] primary
+    def unary(self):
+        print("UNARY")
+
+        # Optional unary +/-
+        if self.checkToken(TokenType.PLUS) or self.checkToken(TokenType.MINUS):
+            self.nextToken()
+        self.primary()
+
+    # BNF: primary ::= number | ident
+    def primary(self):
+        print("PRIMARY (" + self.curToken.text + ")")
+
+        if self.checkToken(TokenType.NUMBER):
+            self.nextToken()
+        elif self.checkToken(TokenType.IDENT):
+            self.nextToken()
+        else:
+            # Error!
+            self.abort("Unexpected token at " + self.curToken.text)
+
     # BNF: nl ::= '\n'+
     def nl(self):
         print("NEWLINE")
