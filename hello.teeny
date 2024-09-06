@@ -1,3 +1,9 @@
 PRINT "hello, world!"
 PRINT "second, line"
 PRINT "and a third..."
+
+LABEL loop
+PRINT "hello, world!"
+GOTO loop
+
+JUMP GOTO

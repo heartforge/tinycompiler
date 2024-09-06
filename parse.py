@@ -42,6 +42,10 @@ class Parser:
     def program(self):
         print("PROGRAM")
 
+        # Since some newlines are required in our grammar, need to skip the excess.
+        while self.checkToken(TokenType.NEWLINE):
+            self.nextToken()
+
         # Parse all the statements in the program.
         while not self.checkToken(TokenType.EOF):
             self.statement()
@@ -62,7 +66,73 @@ class Parser:
                 # Expect an expression.
                 self.expression()
 
-        # Newline.
+        # BNF: "IF" comparison "THEN" {statement} "ENDIF"
+        elif self.checkToken(TokenType.IF):
+            print("STATEMENT-IF")
+            self.nextToken()
+            self.comparison()
+
+            self.match(TokenType.THEN)
+            self.nl()
+
+            # Zero or more statements in the body.
+            while not self.checkToken(TokenType.ENDIF):
+                self.statement()
+
+            self.match(TokenType.ENDIF)
+
+            # BNF: "WHILE" comparison "REPEAT" nl {statement} "ENDWHILE" nl
+        elif self.checkToken(TokenType.WHILE):
+            print("STATEMENT-WHILE")
+            self.nextToken()
+            self.comparison()
+
+            self.match(TokenType.REPEAT)
+            self.nl()
+
+            # Zero or more statements + new lines in the body.
+            while self.curToken != TokenType.ENDWHILE:
+                self.statement()
+
+            self.match(TokenType.ENDWHILE)
+
+        # BNF: "LABEL" ident nl
+        elif self.checkToken(TokenType.LABEL):
+            print("STATEMENT-LABEL")
+            self.nextToken()
+            self.match(TokenType.IDENT)
+
+        # BNF: "GOTO" ident nl
+        elif self.checkToken(TokenType.GOTO):
+            print("STATEMENT-GOTO")
+            self.nextToken()
+            self.match(TokenType.IDENT)
+
+        # BNF: "LET" ident "=" expression nl
+        elif self.checkToken(TokenType.LET):
+            print("STATEMENT-LET")
+            self.nextToken()
+            self.match(TokenType.IDENT)
+            self.match(TokenType.EQ)
+            self.expression()
+
+        # BNF: "INPUT" ident nl
+        elif self.checkToken(TokenType.INPUT):
+            print("STATEMENT-INPUT")
+            self.nextToken()
+            self.match(TokenType.IDENT)
+
+        # This is not a valid statement. Error!
+        else:
+            self.abort(
+                "Invalid statement at "
+                + self.curToken.text
+                + " ("
+                + self.curToken.kind.name
+                + ")"
+            )
+
+        # Newline is end of statement.
         self.nl()
 
     # BNF: nl ::= '\n'+
